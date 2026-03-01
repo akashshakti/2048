@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2048 Ultimate</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="top-bar">
+    <h1>2048 PRO</h1>
+    <div>
+        <button onclick="toggleMode()">🌈 Mode</button>
+        <button onclick="switchMode()">⚡ Mode: <span id="modeText">Single</span></button>
+    </div>
+</div>
+
+<div id="gameArea" class="game-area"></div>
+
+<div id="popup" class="popup hidden">
+    <div class="popup-content">
+        <h2 id="popupText"></h2>
+        <button onclick="restart()">Play Again</button>
+    </div>
+</div>
+
+<audio id="moveSound" src="move.wav"></audio>
+<audio id="winSound" src="win.wav"></audio>
+<audio id="gameOverSound" src="gameover.wav"></audio>
+
+<script src="script.js"></script>
+</body>
+</html>
