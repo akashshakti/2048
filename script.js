@@ -153,4 +153,40 @@ function restart() {
     initGame();
 }
 
+let startX = 0;
+let startY = 0;
+let threshold = 50; // minimum swipe distance
+
+const boardElement = document.getElementById("gameArea");
+
+boardElement.addEventListener("touchstart", function(e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+}, { passive: true });
+
+boardElement.addEventListener("touchend", function(e) {
+
+    let endX = e.changedTouches[0].clientX;
+    let endY = e.changedTouches[0].clientY;
+
+    let dx = endX - startX;
+    let dy = endY - startY;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (Math.abs(dx) > threshold) {
+            if (dx > 0) moveRight();
+            else moveLeft();
+        }
+    } else {
+        if (Math.abs(dy) > threshold) {
+            if (dy > 0) moveDown();
+            else moveUp();
+        }
+    }
+
+    addNumber();
+    updateBoard();
+
+}, { passive: true });
+
 initGame();
