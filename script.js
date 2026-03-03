@@ -6,14 +6,15 @@ const gameArea = document.getElementById("gameArea");
 const popup = document.getElementById("popup");
 const popupText = document.getElementById("popupText");
 
-function initGame() {
+/* ============================= */
+/* 🔵 CREATE BOARD UI */
+/* ============================= */
+
+function createBoardUI() {
     gameArea.innerHTML = "";
-    board = new Array(size * size).fill(0);
-    score = 0;
 
     const grid = document.createElement("div");
     grid.className = "board";
-    grid.id = "board";
 
     for (let i = 0; i < size * size; i++) {
         const tile = document.createElement("div");
@@ -22,11 +23,27 @@ function initGame() {
     }
 
     gameArea.appendChild(grid);
+}
+
+/* ============================= */
+/* 🔵 INIT NEW GAME */
+/* ============================= */
+
+function initGame() {
+    board = new Array(size * size).fill(0);
+    score = 0;
+
+    createBoardUI();
 
     addNumber();
     addNumber();
     updateBoard();
+    saveGame();
 }
+
+/* ============================= */
+/* 🔵 ADD RANDOM TILE */
+/* ============================= */
 
 function addNumber() {
     let empty = board.map((v, i) => v === 0 ? i : null).filter(v => v !== null);
@@ -35,6 +52,10 @@ function addNumber() {
     let randomIndex = empty[Math.floor(Math.random() * empty.length)];
     board[randomIndex] = Math.random() > 0.5 ? 2 : 4;
 }
+
+/* ============================= */
+/* 🔵 UPDATE BOARD UI */
+/* ============================= */
 
 function updateBoard() {
     const tiles = document.querySelectorAll(".tile");
@@ -46,7 +67,12 @@ function updateBoard() {
 
     checkWin();
     checkGameOver();
+    saveGame();
 }
+
+/* ============================= */
+/* 🔵 COLORS */
+/* ============================= */
 
 function getColor(value) {
     const colors = {
@@ -64,6 +90,10 @@ function getColor(value) {
     };
     return colors[value] || "#3c3a32";
 }
+
+/* ============================= */
+/* 🔵 MOVE LOGIC */
+/* ============================= */
 
 function slide(row) {
     row = row.filter(v => v);
@@ -96,25 +126,16 @@ function rotate() {
     board = newBoard;
 }
 
-function moveRight() {
-    rotate(); rotate();
-    moveLeft();
-    rotate(); rotate();
-}
+function moveRight() { rotate(); rotate(); moveLeft(); rotate(); rotate(); }
+function moveUp() { rotate(); rotate(); rotate(); moveLeft(); rotate(); }
+function moveDown() { rotate(); moveLeft(); rotate(); rotate(); rotate(); }
 
-function moveUp() {
-    rotate(); rotate(); rotate();
-    moveLeft();
-    rotate();
-}
-
-function moveDown() {
-    rotate();
-    moveLeft();
-    rotate(); rotate(); rotate();
-}
+/* ============================= */
+/* 🔵 KEYBOARD CONTROLS */
+/* ============================= */
 
 document.addEventListener("keydown", (e) => {
+
     let oldBoard = [...board];
 
     if (e.key === "ArrowLeft") moveLeft();
@@ -123,25 +144,74 @@ document.addEventListener("keydown", (e) => {
     if (e.key === "ArrowDown") moveDown();
 
     if (oldBoard.toString() !== board.toString()) {
-        document.getElementById("moveSound").play();
+        playSound("moveSound");
         addNumber();
         updateBoard();
     }
 });
 
+/* ============================= */
+/* 🔵 MOBILE SWIPE */
+/* ============================= */
+
+let startX = 0;
+let startY = 0;
+let threshold = 50;
+
+gameArea.addEventListener("touchstart", function (e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+}, { passive: true });
+
+gameArea.addEventListener("touchend", function (e) {
+
+    let endX = e.changedTouches[0].clientX;
+    let endY = e.changedTouches[0].clientY;
+
+    let dx = endX - startX;
+    let dy = endY - startY;
+
+    let oldBoard = [...board];
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (Math.abs(dx) > threshold) {
+            dx > 0 ? moveRight() : moveLeft();
+        }
+    } else {
+        if (Math.abs(dy) > threshold) {
+            dy > 0 ? moveDown() : moveUp();
+        }
+    }
+
+    if (oldBoard.toString() !== board.toString()) {
+        playSound("moveSound");
+        addNumber();
+        updateBoard();
+    }
+
+}, { passive: true });
+
+/* ============================= */
+/* 🔵 WIN & GAME OVER */
+/* ============================= */
+
 function checkWin() {
     if (board.includes(2048)) {
-        document.getElementById("winSound").play();
+        playSound("winSound");
         showPopup("🏆 You Win!");
     }
 }
 
 function checkGameOver() {
     if (!board.includes(0)) {
-        document.getElementById("gameOverSound").play();
+        playSound("gameOverSound");
         showPopup("💀 Game Over!");
     }
 }
+
+/* ============================= */
+/* 🔵 POPUP */
+/* ============================= */
 
 function showPopup(text) {
     popupText.innerText = text;
@@ -150,43 +220,52 @@ function showPopup(text) {
 
 function restart() {
     popup.classList.add("hidden");
+    newGame();
+}
+
+/* ============================= */
+/* 🔵 LOCAL STORAGE */
+/* ============================= */
+
+function saveGame() {
+    localStorage.setItem("board", JSON.stringify(board));
+    localStorage.setItem("score", score);
+}
+
+function loadGame() {
+    const savedBoard = localStorage.getItem("board");
+    const savedScore = localStorage.getItem("score");
+
+    if (savedBoard) {
+        board = JSON.parse(savedBoard);
+        score = parseInt(savedScore);
+        createBoardUI();
+        updateBoard();
+    } else {
+        initGame();
+    }
+}
+
+function newGame() {
+    localStorage.removeItem("board");
+    localStorage.removeItem("score");
     initGame();
 }
 
-let startX = 0;
-let startY = 0;
-let threshold = 50; // minimum swipe distance
+/* ============================= */
+/* 🔵 SOUND */
+/* ============================= */
 
-const boardElement = document.getElementById("gameArea");
-
-boardElement.addEventListener("touchstart", function(e) {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-}, { passive: true });
-
-boardElement.addEventListener("touchend", function(e) {
-
-    let endX = e.changedTouches[0].clientX;
-    let endY = e.changedTouches[0].clientY;
-
-    let dx = endX - startX;
-    let dy = endY - startY;
-
-    if (Math.abs(dx) > Math.abs(dy)) {
-        if (Math.abs(dx) > threshold) {
-            if (dx > 0) moveRight();
-            else moveLeft();
-        }
-    } else {
-        if (Math.abs(dy) > threshold) {
-            if (dy > 0) moveDown();
-            else moveUp();
-        }
+function playSound(id) {
+    let sound = document.getElementById(id);
+    if (sound) {
+        sound.currentTime = 0;
+        sound.play();
     }
+}
 
-    addNumber();
-    updateBoard();
+/* ============================= */
+/* 🔵 START GAME */
+/* ============================= */
 
-}, { passive: true });
-
-initGame();
+loadGame();
