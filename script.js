@@ -1,271 +1,407 @@
 let size = 4;
-let board = [];
+let mode = "Single";
+
+let boards = {
+board1: [],
+board2: []
+};
+
 let score = 0;
+let highScore = localStorage.getItem("highScore") || 0;
 
 const gameArea = document.getElementById("gameArea");
-const popup = document.getElementById("popup");
-const popupText = document.getElementById("popupText");
+const scoreDisplay = document.getElementById("score");
+const highScoreDisplay = document.getElementById("highScore");
 
-/* ============================= */
-/* 🔵 CREATE BOARD UI */
-/* ============================= */
+highScoreDisplay.innerText = highScore;
 
-function createBoardUI() {
-    gameArea.innerHTML = "";
+/* ================= */
+/* SAVE / LOAD */
+/* ================= */
 
-    const grid = document.createElement("div");
-    grid.className = "board";
-
-    for (let i = 0; i < size * size; i++) {
-        const tile = document.createElement("div");
-        tile.className = "tile";
-        grid.appendChild(tile);
-    }
-
-    gameArea.appendChild(grid);
+function saveGame(){
+localStorage.setItem("boards", JSON.stringify(boards));
+localStorage.setItem("score", score);
+localStorage.setItem("mode", mode);
 }
 
-/* ============================= */
-/* 🔵 INIT NEW GAME */
-/* ============================= */
+function loadGame(){
 
-function initGame() {
-    board = new Array(size * size).fill(0);
-    score = 0;
+const savedBoards = localStorage.getItem("boards");
+const savedScore = localStorage.getItem("score");
+const savedMode = localStorage.getItem("mode");
 
-    createBoardUI();
+if(savedBoards){
 
-    addNumber();
-    addNumber();
-    updateBoard();
-    saveGame();
+boards = JSON.parse(savedBoards);
+score = parseInt(savedScore) || 0;
+mode = savedMode || "Single";
+
+document.getElementById("modeText").innerText = mode;
+
+createBoardsUI();
+updateBoard("board1");
+
+if(mode==="Multi") updateBoard("board2");
+
+updateScore();
+
+}else{
+
+initGame();
+
 }
 
-/* ============================= */
-/* 🔵 ADD RANDOM TILE */
-/* ============================= */
-
-function addNumber() {
-    let empty = board.map((v, i) => v === 0 ? i : null).filter(v => v !== null);
-    if (empty.length === 0) return;
-
-    let randomIndex = empty[Math.floor(Math.random() * empty.length)];
-    board[randomIndex] = Math.random() > 0.5 ? 2 : 4;
 }
 
-/* ============================= */
-/* 🔵 UPDATE BOARD UI */
-/* ============================= */
+/* ================= */
+/* CREATE BOARD */
+/* ================= */
 
-function updateBoard() {
-    const tiles = document.querySelectorAll(".tile");
+function createBoard(id){
 
-    board.forEach((value, index) => {
-        tiles[index].innerText = value === 0 ? "" : value;
-        tiles[index].style.background = value === 0 ? "#444" : getColor(value);
-    });
+const grid=document.createElement("div");
+grid.className="board";
+grid.id=id;
 
-    checkWin();
-    checkGameOver();
-    saveGame();
+for(let i=0;i<size*size;i++){
+
+let tile=document.createElement("div");
+tile.className="tile";
+
+grid.appendChild(tile);
+
 }
 
-/* ============================= */
-/* 🔵 COLORS */
-/* ============================= */
+return grid;
 
-function getColor(value) {
-    const colors = {
-        2: "#eee4da",
-        4: "#ede0c8",
-        8: "#f2b179",
-        16: "#f59563",
-        32: "#f67c5f",
-        64: "#f65e3b",
-        128: "#edcf72",
-        256: "#edcc61",
-        512: "#edc850",
-        1024: "#edc53f",
-        2048: "#edc22e"
-    };
-    return colors[value] || "#3c3a32";
 }
 
-/* ============================= */
-/* 🔵 MOVE LOGIC */
-/* ============================= */
+function createBoardsUI(){
 
-function slide(row) {
-    row = row.filter(v => v);
-    for (let i = 0; i < row.length - 1; i++) {
-        if (row[i] === row[i + 1]) {
-            row[i] *= 2;
-            row[i + 1] = 0;
-        }
-    }
-    row = row.filter(v => v);
-    while (row.length < size) row.push(0);
-    return row;
+gameArea.innerHTML="";
+
+gameArea.appendChild(createBoard("board1"));
+
+if(mode==="Multi"){
+gameArea.appendChild(createBoard("board2"));
 }
 
-function moveLeft() {
-    for (let i = 0; i < size; i++) {
-        let row = board.slice(i * size, i * size + size);
-        row = slide(row);
-        board.splice(i * size, size, ...row);
-    }
 }
 
-function rotate() {
-    let newBoard = [];
-    for (let i = 0; i < size; i++) {
-        for (let j = size - 1; j >= 0; j--) {
-            newBoard.push(board[j * size + i]);
-        }
-    }
-    board = newBoard;
+/* ================= */
+/* INIT GAME */
+/* ================= */
+
+function initGame(){
+
+boards.board1 = new Array(size*size).fill(0);
+boards.board2 = new Array(size*size).fill(0);
+
+score = 0;
+
+createBoardsUI();
+
+addNumber("board1");
+addNumber("board1");
+
+if(mode==="Multi"){
+addNumber("board2");
+addNumber("board2");
 }
 
-function moveRight() { rotate(); rotate(); moveLeft(); rotate(); rotate(); }
-function moveUp() { rotate(); rotate(); rotate(); moveLeft(); rotate(); }
-function moveDown() { rotate(); moveLeft(); rotate(); rotate(); rotate(); }
+updateBoard("board1");
 
-/* ============================= */
-/* 🔵 KEYBOARD CONTROLS */
-/* ============================= */
+if(mode==="Multi") updateBoard("board2");
 
-document.addEventListener("keydown", (e) => {
+updateScore();
 
-    let oldBoard = [...board];
+saveGame();
 
-    if (e.key === "ArrowLeft") moveLeft();
-    if (e.key === "ArrowRight") moveRight();
-    if (e.key === "ArrowUp") moveUp();
-    if (e.key === "ArrowDown") moveDown();
+}
 
-    if (oldBoard.toString() !== board.toString()) {
-        playSound("moveSound");
-        addNumber();
-        updateBoard();
-    }
+/* ================= */
+/* ADD TILE */
+/* ================= */
+
+function addNumber(boardId){
+
+let board=boards[boardId];
+
+let empty=board.map((v,i)=>v===0?i:null).filter(v=>v!==null);
+
+if(empty.length===0) return;
+
+let randomIndex=empty[Math.floor(Math.random()*empty.length)];
+
+board[randomIndex]=Math.random()>0.5?2:4;
+
+}
+
+/* ================= */
+/* UPDATE BOARD */
+/* ================= */
+
+function updateBoard(boardId){
+
+let board=boards[boardId];
+
+const tiles=document.querySelectorAll("#"+boardId+" .tile");
+
+board.forEach((value,index)=>{
+
+tiles[index].innerText=value===0?"":value;
+
+tiles[index].style.background=value===0?"#444":getColor(value);
+
 });
 
-/* ============================= */
-/* 🔵 MOBILE SWIPE */
-/* ============================= */
+saveGame();
 
-let startX = 0;
-let startY = 0;
-let threshold = 50;
-
-gameArea.addEventListener("touchstart", function (e) {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-}, { passive: true });
-
-gameArea.addEventListener("touchend", function (e) {
-
-    let endX = e.changedTouches[0].clientX;
-    let endY = e.changedTouches[0].clientY;
-
-    let dx = endX - startX;
-    let dy = endY - startY;
-
-    let oldBoard = [...board];
-
-    if (Math.abs(dx) > Math.abs(dy)) {
-        if (Math.abs(dx) > threshold) {
-            dx > 0 ? moveRight() : moveLeft();
-        }
-    } else {
-        if (Math.abs(dy) > threshold) {
-            dy > 0 ? moveDown() : moveUp();
-        }
-    }
-
-    if (oldBoard.toString() !== board.toString()) {
-        playSound("moveSound");
-        addNumber();
-        updateBoard();
-    }
-
-}, { passive: true });
-
-/* ============================= */
-/* 🔵 WIN & GAME OVER */
-/* ============================= */
-
-function checkWin() {
-    if (board.includes(2048)) {
-        playSound("winSound");
-        showPopup("🏆 You Win!");
-    }
 }
 
-function checkGameOver() {
-    if (!board.includes(0)) {
-        playSound("gameOverSound");
-        showPopup("💀 Game Over!");
-    }
+/* ================= */
+/* COLORS */
+/* ================= */
+
+function getColor(value){
+
+const colors={
+2:"#eee4da",
+4:"#ede0c8",
+8:"#f2b179",
+16:"#f59563",
+32:"#f67c5f",
+64:"#f65e3b",
+128:"#edcf72",
+256:"#edcc61",
+512:"#edc850",
+1024:"#edc53f",
+2048:"#edc22e"
+};
+
+return colors[value]||"#3c3a32";
+
 }
 
-/* ============================= */
-/* 🔵 POPUP */
-/* ============================= */
+/* ================= */
+/* SCORE SYSTEM */
+/* ================= */
 
-function showPopup(text) {
-    popupText.innerText = text;
-    popup.classList.remove("hidden");
+function updateScore(){
+
+scoreDisplay.innerText=score;
+
+if(score>highScore){
+
+highScore=score;
+
+localStorage.setItem("highScore",highScore);
+
+highScoreDisplay.innerText=highScore;
+
 }
 
-function restart() {
-    popup.classList.add("hidden");
-    newGame();
 }
 
-/* ============================= */
-/* 🔵 LOCAL STORAGE */
-/* ============================= */
+/* ================= */
+/* MOVE LOGIC */
+/* ================= */
 
-function saveGame() {
-    localStorage.setItem("board", JSON.stringify(board));
-    localStorage.setItem("score", score);
+function slide(row){
+
+row=row.filter(v=>v);
+
+for(let i=0;i<row.length-1;i++){
+
+if(row[i]===row[i+1]){
+
+row[i]*=2;
+
+score+=row[i];
+
+row[i+1]=0;
+
 }
 
-function loadGame() {
-    const savedBoard = localStorage.getItem("board");
-    const savedScore = localStorage.getItem("score");
-
-    if (savedBoard) {
-        board = JSON.parse(savedBoard);
-        score = parseInt(savedScore);
-        createBoardUI();
-        updateBoard();
-    } else {
-        initGame();
-    }
 }
 
-function newGame() {
-    localStorage.removeItem("board");
-    localStorage.removeItem("score");
-    initGame();
+row=row.filter(v=>v);
+
+while(row.length<size) row.push(0);
+
+return row;
+
 }
 
-/* ============================= */
-/* 🔵 SOUND */
-/* ============================= */
+function moveLeft(boardId){
 
-function playSound(id) {
-    let sound = document.getElementById(id);
-    if (sound) {
-        sound.currentTime = 0;
-        sound.play();
-    }
+let board=boards[boardId];
+
+for(let i=0;i<size;i++){
+
+let row=board.slice(i*size,i*size+size);
+
+row=slide(row);
+
+board.splice(i*size,size,...row);
+
 }
 
-/* ============================= */
-/* 🔵 START GAME */
-/* ============================= */
+updateScore();
+
+}
+
+function rotate(boardId){
+
+let board=boards[boardId];
+
+let newBoard=[];
+
+for(let i=0;i<size;i++){
+
+for(let j=size-1;j>=0;j--){
+
+newBoard.push(board[j*size+i]);
+
+}
+
+}
+
+boards[boardId]=newBoard;
+
+}
+
+function moveRight(boardId){rotate(boardId);rotate(boardId);moveLeft(boardId);rotate(boardId);rotate(boardId);}
+function moveUp(boardId){rotate(boardId);rotate(boardId);rotate(boardId);moveLeft(boardId);rotate(boardId);}
+function moveDown(boardId){rotate(boardId);moveLeft(boardId);rotate(boardId);rotate(boardId);rotate(boardId);}
+
+/* ================= */
+/* CONTROLS */
+/* ================= */
+
+document.addEventListener("keydown",(e)=>{
+
+if(mode==="Single"){
+
+handleMove(e.key,"board1");
+
+}else{
+
+if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key))
+handleMove(e.key,"board1");
+
+if(["a","d","w","s"].includes(e.key))
+handleMove(e.key,"board2");
+
+}
+
+});
+
+function handleMove(key,boardId){
+
+let oldBoard=[...boards[boardId]];
+
+if(key==="ArrowLeft"||key==="a") moveLeft(boardId);
+if(key==="ArrowRight"||key==="d") moveRight(boardId);
+if(key==="ArrowUp"||key==="w") moveUp(boardId);
+if(key==="ArrowDown"||key==="s") moveDown(boardId);
+
+if(oldBoard.toString()!==boards[boardId].toString()){
+
+addNumber(boardId);
+
+updateBoard(boardId);
+
+}
+
+}
+
+/* ================= */
+/* MOBILE SWIPE */
+/* ================= */
+
+let startX=0;
+let startY=0;
+
+gameArea.addEventListener("touchstart",e=>{
+startX=e.touches[0].clientX;
+startY=e.touches[0].clientY;
+},{passive:true});
+
+gameArea.addEventListener("touchend",e=>{
+
+let dx=e.changedTouches[0].clientX-startX;
+let dy=e.changedTouches[0].clientY-startY;
+
+if(mode==="Single") handleSwipe(dx,dy,"board1");
+else{
+
+let mid=window.innerWidth/2;
+
+if(startX<mid) handleSwipe(dx,dy,"board1");
+else handleSwipe(dx,dy,"board2");
+
+}
+
+},{passive:true});
+
+function handleSwipe(dx,dy,boardId){
+
+let oldBoard=[...boards[boardId]];
+
+if(Math.abs(dx)>Math.abs(dy)){
+
+dx>0?moveRight(boardId):moveLeft(boardId);
+
+}else{
+
+dy>0?moveDown(boardId):moveUp(boardId);
+
+}
+
+if(oldBoard.toString()!==boards[boardId].toString()){
+
+addNumber(boardId);
+
+updateBoard(boardId);
+
+}
+
+}
+
+/* ================= */
+/* MODE BUTTONS */
+/* ================= */
+
+function switchMode(){
+
+mode=mode==="Single"?"Multi":"Single";
+
+document.getElementById("modeText").innerText=mode;
+
+initGame();
+
+}
+
+function toggleMode(){
+
+document.body.classList.toggle("light-mode");
+
+}
+
+function newGame(){
+
+localStorage.removeItem("boards");
+
+localStorage.removeItem("score");
+
+initGame();
+
+}
+
+/* ================= */
+/* START */
+/* ================= */
 
 loadGame();
