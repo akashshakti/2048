@@ -76,3 +76,13 @@ button {
     margin:5px;
 
 }
+
+.score-panel{
+display:flex;
+gap:20px;
+justify-content:center;
+margin:10px;
+font-size:18px;
+font-weight:bold;
+}
+
