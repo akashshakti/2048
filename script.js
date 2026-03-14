@@ -1,18 +1,18 @@
 let size=4;
 let board=[];
 let score=0;
-let mode="Single";
 
 const gameArea=document.getElementById("gameArea");
 const scoreDisplay=document.getElementById("score");
 const highTileDisplay=document.getElementById("highTile");
+const winScreen=document.getElementById("winScreen");
 
 let startX=0;
 let startY=0;
 
-/* BOARD UI */
+/* create board */
 
-function createBoardUI(){
+function createBoard(){
 
 gameArea.innerHTML="";
 
@@ -32,25 +32,33 @@ gameArea.appendChild(grid);
 
 }
 
-/* INIT GAME */
+/* new game */
+
+function newGame(){
+
+localStorage.clear();
+
+initGame();
+
+}
+
+/* init */
 
 function initGame(){
 
 board=new Array(size*size).fill(0);
 score=0;
 
-createBoardUI();
+createBoard();
 
 addNumber();
 addNumber();
 
 updateBoard();
 
-saveGame();
-
 }
 
-/* RANDOM TILE */
+/* add number */
 
 function addNumber(){
 
@@ -64,7 +72,7 @@ board[index]=Math.random()>0.5?2:4;
 
 }
 
-/* UPDATE BOARD */
+/* update board */
 
 function updateBoard(){
 
@@ -74,21 +82,28 @@ board.forEach((value,index)=>{
 
 tiles[index].innerText=value===0?"":value;
 
-tiles[index].style.background=value===0?"#444":getColor(value);
+tiles[index].style.background=getColor(value);
 
 });
 
-updateScore();
+scoreDisplay.innerText=score;
 
-saveGame();
+highTileDisplay.innerText=Math.max(...board);
+
+localStorage.setItem("board",JSON.stringify(board));
+localStorage.setItem("score",score);
+
+checkWin();
 
 }
 
-/* COLORS */
+/* colors */
 
 function getColor(v){
 
 const c={
+
+0:"#444",
 2:"#eee4da",
 4:"#ede0c8",
 8:"#f2b179",
@@ -100,25 +115,14 @@ const c={
 512:"#edc850",
 1024:"#edc53f",
 2048:"#edc22e"
+
 };
 
 return c[v]||"#3c3a32";
 
 }
 
-/* SCORE */
-
-function updateScore(){
-
-scoreDisplay.innerText=score;
-
-let maxTile=Math.max(...board);
-
-highTileDisplay.innerText=maxTile;
-
-}
-
-/* MOVE LOGIC */
+/* slide */
 
 function slide(row){
 
@@ -129,10 +133,12 @@ for(let i=0;i<row.length-1;i++){
 if(row[i]===row[i+1]){
 
 row[i]*=2;
+
 score+=row[i];
+
 row[i+1]=0;
 
-playSound("mergeSound");
+play("mergeSound");
 
 }
 
@@ -145,6 +151,8 @@ while(row.length<size)row.push(0);
 return row;
 
 }
+
+/* moves */
 
 function moveLeft(){
 
@@ -182,27 +190,9 @@ function moveRight(){rotate();rotate();moveLeft();rotate();rotate();}
 function moveUp(){rotate();rotate();rotate();moveLeft();rotate();}
 function moveDown(){rotate();moveLeft();rotate();rotate();rotate();}
 
-/* GAME OVER */
+/* keyboard */
 
-function checkGameOver(){
-
-if(board.includes(0))return;
-
-for(let i=0;i<15;i++){
-
-if(board[i]===board[i+1])return;
-
-}
-
-playSound("gameOverSound");
-
-alert("Game Over");
-
-}
-
-/* KEYBOARD */
-
-document.addEventListener("keydown",(e)=>{
+document.addEventListener("keydown",e=>{
 
 let old=[...board];
 
@@ -213,22 +203,23 @@ if(e.key==="ArrowDown")moveDown();
 
 if(old.toString()!=board.toString()){
 
-playSound("moveSound");
+play("moveSound");
 
 addNumber();
 updateBoard();
-checkGameOver();
 
 }
 
 });
 
-/* MOBILE SWIPE */
+/* swipe */
 
 gameArea.addEventListener("touchstart",e=>{
+
 startX=e.touches[0].clientX;
 startY=e.touches[0].clientY;
-},{passive:true});
+
+});
 
 gameArea.addEventListener("touchend",e=>{
 
@@ -249,19 +240,18 @@ dy>0?moveDown():moveUp();
 
 if(old.toString()!=board.toString()){
 
-playSound("moveSound");
+play("moveSound");
 
 addNumber();
 updateBoard();
-checkGameOver();
 
 }
 
-},{passive:true});
+});
 
-/* SOUND */
+/* sound */
 
-function playSound(id){
+function play(id){
 
 let s=document.getElementById(id);
 
@@ -273,25 +263,28 @@ s.play().catch(()=>{});
 
 }
 
-/* SAVE LOAD */
+/* win */
 
-function saveGame(){
+function checkWin(){
 
-localStorage.setItem("board",JSON.stringify(board));
-localStorage.setItem("score",score);
+if(board.includes(2048)){
+
+winScreen.classList.remove("hidden");
 
 }
 
-function loadGame(){
+}
 
-let saved=localStorage.getItem("board");
+/* start */
 
-if(saved){
+let savedBoard=localStorage.getItem("board");
 
-board=JSON.parse(saved);
+if(savedBoard){
+
+board=JSON.parse(savedBoard);
 score=parseInt(localStorage.getItem("score"))||0;
 
-createBoardUI();
+createBoard();
 updateBoard();
 
 }else{
@@ -299,32 +292,3 @@ updateBoard();
 initGame();
 
 }
-
-}
-
-/* BUTTONS */
-
-function newGame(){
-
-localStorage.clear();
-initGame();
-
-}
-
-function toggleMode(){
-
-document.body.classList.toggle("light-mode");
-
-}
-
-function switchMode(){
-
-mode=mode==="Single"?"Multi":"Single";
-
-document.getElementById("modeText").innerText=mode;
-
-}
-
-/* START */
-
-loadGame();
