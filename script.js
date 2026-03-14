@@ -93,6 +93,8 @@ highTileDisplay.innerText=Math.max(...board);
 localStorage.setItem("board",JSON.stringify(board));
 localStorage.setItem("score",score);
 
+checkGameOver();
+
 checkWin();
 
 }
@@ -189,6 +191,61 @@ board=newBoard;
 function moveRight(){rotate();rotate();moveLeft();rotate();rotate();}
 function moveUp(){rotate();rotate();rotate();moveLeft();rotate();}
 function moveDown(){rotate();moveLeft();rotate();rotate();rotate();}
+
+
+/* Game over ho ka*/
+
+function checkGameOver(){
+
+// empty tile hai to game over nahi
+if(board.includes(0)) return false;
+
+// horizontal check
+for(let i=0;i<4;i++){
+
+for(let j=0;j<3;j++){
+
+let index=i*4+j;
+
+if(board[index]===board[index+1]){
+
+return false;
+
+}
+
+}
+
+}
+
+// vertical check
+for(let j=0;j<4;j++){
+
+for(let i=0;i<3;i++){
+
+let index=i*4+j;
+
+if(board[index]===board[index+4]){
+
+return false;
+
+}
+
+}
+
+}
+
+// agar koi move possible nahi
+play("gameOverSound");
+
+setTimeout(()=>{
+
+alert("💀 Game Over");
+
+},200);
+
+return true;
+
+}
 
 /* keyboard */
 
