@@ -1,42 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>2048 Ultimate</title>
-<link rel="shorcut icon" href="Akash.png">
+
 <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div class="top-bar">
-    <h1>2048 PRO</h1>
-    <div class="scorePanel">
-        <div>Score: <span id="score">0</span></div>
-        <div>High Score: <span id="highTile">0</span></div>
-    </div>
-    <div class="controls">
-        <button onclick="toggleMode()">🌈 Mode</button>
-        <button onclick="switchMode()">⚡ Mode: <span id="modeText">Single</span></button>
-        <button onclick="newGame()" id="startBtn">🎮 New Game</button>
-    </div>
+<h1>2048 Ultimate</h1>
+
+<div class="controls">
+
+<button onclick="newGame()">🎮 New Game</button>
+
+<button onclick="toggleMode()">🌈 Color Mode</button>
+
+<button onclick="switchMode()">⚡ Mode: <span id="modeText">Single</span></button>
+
 </div>
 
-<div id="gameArea" class="game-area"></div>
+<div class="scorePanel">
 
-<div id="popup" class="popup hidden">
-    <div class="popup-content">
-        <h2 id="popupText"></h2>
-        <button onclick="restart()">Play Again</button>
-    </div>
+<div>Score : <span id="score">0</span></div>
+
+<div>Highest Tile : <span id="highTile">0</span></div>
+
 </div>
+
+<div id="gameArea"></div>
 
 <audio id="moveSound" src="move.wav"></audio>
-<audio id="winSound" src="win.wav"></audio>
+<audio id="mergeSound" src="merge.wav"></audio>
 <audio id="gameOverSound" src="gameover.wav"></audio>
 
 <script src="script.js"></script>
+
 </body>
-
 </html>
-
-
