@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 
 <title>2048 Ultimate</title>
 
 <link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
@@ -33,8 +35,16 @@
 
 <div id="gameArea"></div>
 
+<div id="winScreen" class="popup hidden">
+
+<h2>🏆 You Win! 2048 Achieved</h2>
+
+<button onclick="newGame()">Play Again</button>
+
+</div>
+
 <audio id="moveSound" src="move.wav"></audio>
-<audio id="mergeSound" src="merge.wav"></audio>
+<audio id="mergeSound" src="merge.mp3"></audio>
 <audio id="gameOverSound" src="gameover.wav"></audio>
 
 <script src="script.js"></script>
