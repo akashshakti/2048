@@ -58,7 +58,7 @@ updateBoard();
 
 }
 
-/* add number */
+/* add number section */
 
 function addNumber(){
 
@@ -306,7 +306,7 @@ updateBoard();
 
 });
 
-/* sound */
+/* sounds */
 
 function play(id){
 
