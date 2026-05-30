@@ -1,6 +1,8 @@
 let size=4;
 let board=[];
 let score=0;
+let previousBoard=[];
+let previousScore=0;
 
 const gameArea=document.getElementById("gameArea");
 const scoreDisplay=document.getElementById("score");
@@ -347,5 +349,18 @@ updateBoard();
 }else{
 
 initGame();
+
+}
+
+
+function undoMove(){
+
+if(previousBoard.length===0) return;
+
+board=[...previousBoard];
+
+score=previousScore;
+
+updateBoard();
 
 }
