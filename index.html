@@ -21,6 +21,8 @@
 
 <button onclick="newGame()">🎮 New Game</button>
 
+<button onclick="undoMove()">↩ Undo</button>
+
 <button onclick="toggleMode()">🌈 Color Mode</button>
 
 <button onclick="switchMode()">⚡ Mode: <span id="modeText">Single</span></button>
@@ -36,6 +38,18 @@
 </div>
 
 <div id="gameArea"></div>
+
+<div id="gameOverModal" class="modal hidden">
+
+<div class="modal-content">
+
+<h2>💀 Game Over</h2>
+
+<button onclick="newGame()">🔄 Play Again</button>
+
+</div>
+
+</div>
 
 <div id="winScreen" class="popup hidden">
 
